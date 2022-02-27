@@ -26,7 +26,7 @@ Let's enrich your life with Bucket LIST CLI!!
 
 # Installation
 Bucket List CLI is written in Rust, so you can build and install with `cargo`.
-To build, you need to isntall Rust as a prerequisite.
+To build, you need to install Rust as a prerequisite.
 ```
 $ git clone https://github.com/zulinx86/bucketlist_cli
 $ cd bucketlist_cli
