@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::error::Error;
+use main_error::MainError;
 
 mod app;
 
@@ -50,36 +50,21 @@ enum Action {
     },
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), MainError> {
     env_logger::init();
 
     let args = Args::parse();
     log::info!("args: {:?}", args);
 
-    let mut items = app::read_file()?;
+    let items = app::read_file()?;
 
-    match args.action {
-        Action::Add { name } => {
-            log::info!("Add action");
-            items = app::add_or_incr(items, name)?;
-        },
-        Action::Incr { name } => {
-            log::info!("Incr action");
-            items = app::add_or_incr(items, name)?;
-        },
-        Action::Note { name, note} => {
-            log::info!("Note action");
-            items = app::note(items, name, note)?;
-        }
-        Action::Del { name } => {
-            log::info!("Del action");
-            items = app::del(items, name)?;
-        },
-        Action::Ls { all } => {
-            log::info!("Ls action");
-            items = app::ls(items, all)?;
-        }
-    }
+    let items = match args.action {
+        Action::Add { name } => app::add_or_incr(items, name),
+        Action::Incr { name } => app::add_or_incr(items, name),
+        Action::Note { name, note} => app::note(items, name, note),
+        Action::Del { name } => app::del(items, name),
+        Action::Ls { all } => app::ls(items, all),
+    }?;
 
     log::debug!("{:#?}", items);
     app::save_file(items)?;
