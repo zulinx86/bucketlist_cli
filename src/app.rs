@@ -71,14 +71,14 @@ pub fn save_file(items: IndexMap<String, Info>) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn add(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>, Box<dyn Error>> {
+pub fn add_or_incr(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>, Box<dyn Error>> {
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     match items.get_mut(&name) {
         Some(info) => {
             info.prio += 1.0;
             info.last = now;
             info.active = true;
-            println!("The priority of `{}` is raised.", name);
+            println!("The priority of `{}` gets higher.", name);
         },
         None => {
             items.insert(name.clone(), Info {
