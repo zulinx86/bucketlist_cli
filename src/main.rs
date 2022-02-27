@@ -21,6 +21,12 @@ enum Action {
         name: String,
     },
 
+    /// Same as `add`.
+    Incr {
+        /// Name of the item
+        name: String,
+    },
+
     /// Add a note to an existing item.
     Note {
         /// Name of the item
@@ -55,7 +61,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     match args.action {
         Action::Add { name } => {
             log::info!("Add action");
-            items = app::add(items, name)?;
+            items = app::add_or_incr(items, name)?;
+        },
+        Action::Incr { name } => {
+            log::info!("Incr action");
+            items = app::add_or_incr(items, name)?;
         },
         Action::Note { name, note} => {
             log::info!("Note action");
