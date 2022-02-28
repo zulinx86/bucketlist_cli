@@ -15,6 +15,8 @@ const ACTIVE_THRESHOLD: f32 = 0.1;
 pub enum BucketListError {
     #[error("No such an item (name: `{0}`).")]
     NotFoundError(String),
+    #[error("Failed to convert home directory to str.")]
+    HomeDirError,
     #[error("I/O related error happened.")]
     IoError(#[from] std::io::Error),
     #[error("Time related error happened.")]
@@ -34,7 +36,11 @@ pub struct Info {
 pub fn read_file() -> Result<IndexMap<String, Info>, BucketListError> {
     let dir = match dirs::home_dir() {
         None => format!("./{}", CONFIG_DIRNAME),
-        Some(home) => format!("{}/{}", home.to_str().unwrap(), CONFIG_DIRNAME),
+        Some(home) => format!(
+            "{}/{}",
+            home.to_str().ok_or(BucketListError::HomeDirError)?,
+            CONFIG_DIRNAME
+        ),
     };
     std::fs::create_dir_all(&dir)?;
 
@@ -63,7 +69,11 @@ pub fn read_file() -> Result<IndexMap<String, Info>, BucketListError> {
 pub fn save_file(items: IndexMap<String, Info>) -> Result<(), BucketListError> {
     let dir = match dirs::home_dir() {
         None => format!("./{}", CONFIG_DIRNAME),
-        Some(home) => format!("{}/{}", home.to_str().unwrap(), CONFIG_DIRNAME),
+        Some(home) => format!(
+            "{}/{}",
+            home.to_str().ok_or(BucketListError::HomeDirError)?,
+            CONFIG_DIRNAME
+        ),
     };
 
     let file = OpenOptions::new()
@@ -125,7 +135,12 @@ pub fn del(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<S
 }
 
 pub fn ls(mut items: IndexMap<String, Info>, all: bool) -> Result<IndexMap<String, Info>, BucketListError> {
-    items.sort_by(|_, v1, _, v2| v1.prio.partial_cmp(&v2.prio).unwrap().reverse());
+    items.sort_by(
+        |_, v1, _, v2| 
+            v1.prio.partial_cmp(&v2.prio).unwrap().reverse()
+        // TODO: change partial_cmp() to total_cmp() when total_cmp() become stable in order to remove unwrap().
+        // https://github.com/rust-lang/rust/issues/72599
+    );
 
     for (k, v) in &items {
         if all == false && v.prio <= ACTIVE_THRESHOLD {
