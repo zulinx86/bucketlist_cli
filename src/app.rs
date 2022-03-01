@@ -35,13 +35,19 @@ pub struct Info {
     note: String,
 }
 
+fn get_bucketlist_dir() -> Result<String> {
+    Ok(
+        format!(
+            "{}/{}",
+            dirs::home_dir().ok_or(BucketListError::HomeDir)?
+                .to_str().ok_or(BucketListError::HomeDir)?,
+            CONFIG_DIRNAME
+        )
+    )
+}
+
 pub fn read_file() -> Result<IndexMap<String, Info>> {
-    let dir = format!(
-        "{}/{}",
-        dirs::home_dir().ok_or(BucketListError::HomeDir)?
-            .to_str().ok_or(BucketListError::HomeDir)?,
-        CONFIG_DIRNAME
-    );
+    let dir = get_bucketlist_dir()?;
     std::fs::create_dir_all(&dir)?;
 
     match File::open(format!("{}/{}", dir, DATA_FILENAME)) {
@@ -67,12 +73,7 @@ pub fn read_file() -> Result<IndexMap<String, Info>> {
 }
 
 pub fn save_file(items: IndexMap<String, Info>) -> Result<()> {
-    let dir = format!(
-        "{}/{}",
-        dirs::home_dir().ok_or(BucketListError::HomeDir)?
-            .to_str().ok_or(BucketListError::HomeDir)?,
-        CONFIG_DIRNAME
-    );
+    let dir = get_bucketlist_dir()?;
 
     let file = OpenOptions::new()
         .write(true)
