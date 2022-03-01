@@ -17,7 +17,7 @@ type Result<T> = std::result::Result<T, BucketListError>;
 pub enum BucketListError {
     #[error("No such an item (name: `{0}`).")]
     NotFoundError(String),
-    #[error("Failed to convert home directory to str.")]
+    #[error("Failed to get home directory.")]
     HomeDirError,
     #[error("I/O related error happened.")]
     IoError(#[from] std::io::Error),
@@ -36,14 +36,12 @@ pub struct Info {
 }
 
 pub fn read_file() -> Result<IndexMap<String, Info>> {
-    let dir = match dirs::home_dir() {
-        None => format!("./{}", CONFIG_DIRNAME),
-        Some(home) => format!(
-            "{}/{}",
-            home.to_str().ok_or(BucketListError::HomeDirError)?,
-            CONFIG_DIRNAME
-        ),
-    };
+    let dir = format!(
+        "{}/{}",
+        dirs::home_dir().ok_or(BucketListError::HomeDirError)?
+            .to_str().ok_or(BucketListError::HomeDirError)?,
+        CONFIG_DIRNAME
+    );
     std::fs::create_dir_all(&dir)?;
 
     match File::open(format!("{}/{}", dir, DATA_FILENAME)) {
@@ -69,14 +67,12 @@ pub fn read_file() -> Result<IndexMap<String, Info>> {
 }
 
 pub fn save_file(items: IndexMap<String, Info>) -> Result<()> {
-    let dir = match dirs::home_dir() {
-        None => format!("./{}", CONFIG_DIRNAME),
-        Some(home) => format!(
-            "{}/{}",
-            home.to_str().ok_or(BucketListError::HomeDirError)?,
-            CONFIG_DIRNAME
-        ),
-    };
+    let dir = format!(
+        "{}/{}",
+        dirs::home_dir().ok_or(BucketListError::HomeDirError)?
+            .to_str().ok_or(BucketListError::HomeDirError)?,
+        CONFIG_DIRNAME
+    );
 
     let file = OpenOptions::new()
         .write(true)
