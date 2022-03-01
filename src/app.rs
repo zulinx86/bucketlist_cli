@@ -51,7 +51,12 @@ pub fn read_file() -> Result<IndexMap<String, Info>> {
     std::fs::create_dir_all(&dir)?;
 
     match File::open(format!("{}/{}", dir, DATA_FILENAME)) {
-        Err(_) => Ok(IndexMap::new()),
+        Err(e) => {
+            match e.kind() {
+                std::io::ErrorKind::NotFound => Ok(IndexMap::new()),
+                _ => Err(BucketListError::from(e)),
+            }
+        },
         Ok(file) => {
             let reader = BufReader::new(file);
 
