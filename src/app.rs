@@ -11,6 +11,8 @@ const DECAY: f32 = 0.925;
 const SEC_OF_DECAY: u64 = 86400;
 const ACTIVE_THRESHOLD: f32 = 0.1;
 
+type Result<T> = std::result::Result<T, BucketListError>;
+
 #[derive(Debug, Error)]
 pub enum BucketListError {
     #[error("No such an item (name: `{0}`).")]
@@ -33,7 +35,7 @@ pub struct Info {
     note: String,
 }
 
-pub fn read_file() -> Result<IndexMap<String, Info>, BucketListError> {
+pub fn read_file() -> Result<IndexMap<String, Info>> {
     let dir = match dirs::home_dir() {
         None => format!("./{}", CONFIG_DIRNAME),
         Some(home) => format!(
@@ -66,7 +68,7 @@ pub fn read_file() -> Result<IndexMap<String, Info>, BucketListError> {
     }
 }
 
-pub fn save_file(items: IndexMap<String, Info>) -> Result<(), BucketListError> {
+pub fn save_file(items: IndexMap<String, Info>) -> Result<()> {
     let dir = match dirs::home_dir() {
         None => format!("./{}", CONFIG_DIRNAME),
         Some(home) => format!(
@@ -87,7 +89,7 @@ pub fn save_file(items: IndexMap<String, Info>) -> Result<(), BucketListError> {
     Ok(())
 }
 
-pub fn add_or_incr(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>, BucketListError> {
+pub fn add_or_incr(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)?
         .as_secs();
@@ -112,7 +114,7 @@ pub fn add_or_incr(mut items: IndexMap<String, Info>, name: String) -> Result<In
     Ok(items)
 }
 
-pub fn note(mut items: IndexMap<String, Info>, name: String, note: String) -> Result<IndexMap<String, Info>, BucketListError> {
+pub fn note(mut items: IndexMap<String, Info>, name: String, note: String) -> Result<IndexMap<String, Info>> {
     match items.get_mut(&name) {
         None => Err(BucketListError::NotFoundError(name)),
         Some(info) => {
@@ -123,7 +125,7 @@ pub fn note(mut items: IndexMap<String, Info>, name: String, note: String) -> Re
     }
 }
 
-pub fn del(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>, BucketListError> {
+pub fn del(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>> {
     match items.remove(&name) {
         None => Err(BucketListError::NotFoundError(name)),
         Some(info) => {
@@ -134,7 +136,7 @@ pub fn del(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<S
     }
 }
 
-pub fn ls(mut items: IndexMap<String, Info>, all: bool) -> Result<IndexMap<String, Info>, BucketListError> {
+pub fn ls(mut items: IndexMap<String, Info>, all: bool) -> Result<IndexMap<String, Info>> {
     items.sort_by(
         |_, v1, _, v2| 
             v1.prio.partial_cmp(&v2.prio).unwrap().reverse()
