@@ -16,15 +16,15 @@ type Result<T> = std::result::Result<T, BucketListError>;
 #[derive(Debug, Error)]
 pub enum BucketListError {
     #[error("No such an item (name: `{0}`).")]
-    NotFoundError(String),
+    NotFound(String),
     #[error("Failed to get home directory.")]
-    HomeDirError,
+    HomeDir,
     #[error("I/O related error happened.")]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
     #[error("Time related error happened.")]
-    TimeError(#[from] std::time::SystemTimeError),
+    Time(#[from] std::time::SystemTimeError),
     #[error("Serde related error happened.")]
-    SeredeError(#[from] serde_json::Error),
+    Serde(#[from] serde_json::Error),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,8 +38,8 @@ pub struct Info {
 pub fn read_file() -> Result<IndexMap<String, Info>> {
     let dir = format!(
         "{}/{}",
-        dirs::home_dir().ok_or(BucketListError::HomeDirError)?
-            .to_str().ok_or(BucketListError::HomeDirError)?,
+        dirs::home_dir().ok_or(BucketListError::HomeDir)?
+            .to_str().ok_or(BucketListError::HomeDir)?,
         CONFIG_DIRNAME
     );
     std::fs::create_dir_all(&dir)?;
@@ -69,8 +69,8 @@ pub fn read_file() -> Result<IndexMap<String, Info>> {
 pub fn save_file(items: IndexMap<String, Info>) -> Result<()> {
     let dir = format!(
         "{}/{}",
-        dirs::home_dir().ok_or(BucketListError::HomeDirError)?
-            .to_str().ok_or(BucketListError::HomeDirError)?,
+        dirs::home_dir().ok_or(BucketListError::HomeDir)?
+            .to_str().ok_or(BucketListError::HomeDir)?,
         CONFIG_DIRNAME
     );
 
@@ -112,7 +112,7 @@ pub fn add_or_incr(mut items: IndexMap<String, Info>, name: String) -> Result<In
 
 pub fn note(mut items: IndexMap<String, Info>, name: String, note: String) -> Result<IndexMap<String, Info>> {
     match items.get_mut(&name) {
-        None => Err(BucketListError::NotFoundError(name)),
+        None => Err(BucketListError::NotFound(name)),
         Some(info) => {
             info.note = note;
             println!("The note of `{}` is upated.", name);
@@ -123,7 +123,7 @@ pub fn note(mut items: IndexMap<String, Info>, name: String, note: String) -> Re
 
 pub fn del(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>> {
     match items.remove(&name) {
-        None => Err(BucketListError::NotFoundError(name)),
+        None => Err(BucketListError::NotFound(name)),
         Some(info) => {
             println!("`{}` is deleted.", name);
             log::info!("{:#?}", info);
