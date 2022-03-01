@@ -140,14 +140,13 @@ pub fn del(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<S
 
 pub fn ls(mut items: IndexMap<String, Info>, all: bool) -> Result<IndexMap<String, Info>> {
     items.sort_by(
-        |_, v1, _, v2| 
-            v1.prio.partial_cmp(&v2.prio).unwrap().reverse()
+        |_, v1, _, v2| v1.prio.partial_cmp(&v2.prio).unwrap().reverse()
         // TODO: change partial_cmp() to total_cmp() when total_cmp() become stable in order to remove unwrap().
         // https://github.com/rust-lang/rust/issues/72599
     );
 
     for (k, v) in &items {
-        if all == false && v.prio <= ACTIVE_THRESHOLD {
+        if !all && v.prio <= ACTIVE_THRESHOLD {
             break
         }
         println!("{}: {:#?}", k, v);
