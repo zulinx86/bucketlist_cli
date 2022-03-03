@@ -59,20 +59,8 @@ pub fn read_file() -> Result<IndexMap<String, Info>> {
         },
         Ok(file) => {
             let reader = BufReader::new(file);
-
-            let mut items: IndexMap<String, Info> = serde_json::from_reader(reader)?;
-
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)?
-                .as_secs();
-
-            for (_, info) in items.iter_mut() {
-                let days = (now - info.last) / SEC_OF_DECAY;
-                info.prio *= DECAY.powi(days as i32);
-                info.active = info.prio >= ACTIVE_THRESHOLD;
-            }
-
-            Ok(items)
+            let items: IndexMap<String, Info> = serde_json::from_reader(reader)?;
+            Ok(update_prio(items)?)
         },
     }
 }
@@ -89,6 +77,23 @@ pub fn save_file(items: IndexMap<String, Info>) -> Result<()> {
     serde_json::to_writer(&file, &items)?;
 
     Ok(())
+}
+
+fn update_prio(mut items: IndexMap<String, Info>) -> Result<IndexMap<String, Info>> {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)?
+        .as_secs();
+
+    for (_, info) in items.iter_mut() {
+        let days = (now - info.last) / SEC_OF_DECAY;
+        if days > 0 {
+            info.last = now;
+            info.prio *= DECAY.powi(days as i32);
+            info.active = info.prio >= ACTIVE_THRESHOLD;
+        }
+    }
+
+    Ok(items)
 }
 
 pub fn add_or_incr(mut items: IndexMap<String, Info>, name: String) -> Result<IndexMap<String, Info>> {
